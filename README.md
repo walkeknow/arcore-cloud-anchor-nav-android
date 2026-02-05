@@ -11,18 +11,21 @@ This application leverages Google's ARCore Cloud Anchors API and Firebase to cre
 ## Features
 
 ### 1. **Cloud Anchor Management**
+
 - **Host Anchors**: Create and host new cloud anchors by tapping on detected planes in AR
 - **Persistent Storage**: All anchors are stored in Firebase Realtime Database with unique IDs
 - **Cloud Synchronization**: Anchors are synced across devices through Google Cloud Anchor API
 - **Privacy Controls**: Privacy notice dialog for user consent on data collection
 
 ### 2. **Anchor Resolution**
+
 - **Multi-Anchor Selection**: Select multiple anchors from a dropdown list to resolve simultaneously
 - **Cross-Device Resolution**: Resolve anchors created on different devices
 - **Real-time Tracking**: Continuous tracking of resolved anchor positions in 3D space
 - **Visual Anchor Models**: 3D anchor models rendered at resolved positions
 
 ### 3. **AR Navigation Lines**
+
 - **Path Visualization**: Draw thick, translucent purple lines between selected anchor points
 - **Animated Arrowheads**: Recurring white chevron arrows indicating direction of travel
 - **3D Line Rendering**: Lines rendered as volumetric quads with proper depth handling
@@ -33,22 +36,22 @@ This application leverages Google's ARCore Cloud Anchors API and Firebase to cre
   - Arrow spacing: 0.4 meters apart
 
 ### 4. **Feature Map Quality Indicator**
+
 - **Real-time Quality Assessment**: Visual bar showing the quality of the environment for anchor hosting
 - **Hosting Guidance**: Helps users understand when the environment is suitable for creating stable anchors
 - **Color-coded Feedback**: Green, yellow, and red indicators for feature map quality
 
 ### 5. **User Interface**
-- **Main Lobby**: 
+
+- **Main Lobby**:
   - Host new anchors button
   - Resolve existing anchors button
   - Privacy notice and settings
-  
 - **Cloud Anchor Activity**:
   - AR camera view with plane detection
   - Tap-to-place anchor functionality
   - Feature map quality indicator
   - Save anchor dialog with custom naming
-  
 - **Resolve Anchors Lobby**:
   - List of all available anchors
   - Multi-select checkboxes for anchor selection
@@ -56,6 +59,7 @@ This application leverages Google's ARCore Cloud Anchors API and Firebase to cre
   - "Draw Lines Between Anchors" button for navigation visualization
 
 ### 6. **Advanced Rendering**
+
 - **Background Renderer**: Renders camera feed with optional depth visualization
 - **Plane Renderer**: Visualizes detected horizontal and vertical planes
 - **Point Cloud Renderer**: Shows feature points detected by ARCore
@@ -67,6 +71,7 @@ This application leverages Google's ARCore Cloud Anchors API and Firebase to cre
   - Proper depth testing and Z-fighting prevention
 
 ### 7. **Camera and Tracking**
+
 - **6DOF Tracking**: Full six degrees of freedom tracking
 - **Plane Detection**: Automatic detection of horizontal and vertical surfaces
 - **Camera Permission Handling**: Graceful permission request and handling
@@ -74,6 +79,7 @@ This application leverages Google's ARCore Cloud Anchors API and Firebase to cre
 - **Full-screen Immersive Mode**: Distraction-free AR experience
 
 ### 8. **Firebase Integration**
+
 - **Realtime Database**: Stores anchor IDs and metadata
 - **Cloud Functions Ready**: Extensible for server-side logic
 - **Authentication**: Google Services integration for user management
@@ -115,6 +121,7 @@ This application leverages Google's ARCore Cloud Anchors API and Firebase to cre
 ### Installation
 
 1. Clone the repository:
+
    ```bash
    git clone https://github.com/walkeknow/google-ar-cloud-anchor-navigation.git
    cd google-ar-cloud-anchor-navigation
@@ -125,8 +132,12 @@ This application leverages Google's ARCore Cloud Anchors API and Firebase to cre
    - Place in `app/` directory
 
 3. Configure API Keys:
-   - Open `app/src/main/res/values/api_keys.xml`
-   - Add your Cloud Anchor API key
+   - Copy `local.properties.example` to `local.properties`
+   - Add your Cloud Anchor API key to `local.properties`:
+     ```properties
+     CLOUD_ANCHOR_API_KEY=your_api_key_here
+     ```
+   - Note: `local.properties` is gitignored and won't be committed
 
 4. Build and run:
    ```bash
@@ -181,6 +192,7 @@ private float arrowSpacing = 0.4f;
 ### Custom Shaders
 
 Shader files located in `app/src/main/assets/shaders/`:
+
 - `line.vert`: Vertex shader for line rendering
 - `line.frag`: Fragment shader for line rendering
 - Modify for custom visual effects
@@ -253,7 +265,7 @@ limitations under the License.
 ## Support
 
 For issues and questions:
+
 - GitHub Issues: [Report a bug](https://github.com/walkeknow/google-ar-cloud-anchor-navigation/issues)
 - ARCore Documentation: [developers.google.com/ar](https://developers.google.com/ar)
 - Firebase Documentation: [firebase.google.com/docs](https://firebase.google.com/docs)
-

@@ -1,0 +1,10 @@
+## This file is a template for local.properties
+# Copy this file to local.properties and fill in your values
+# local.properties is gitignored and won't be committed
+
+# Location of the Android SDK (usually auto-generated)
+sdk.dir=/path/to/your/Android/sdk
+
+# Cloud Anchor API Key
+# Get this from Google Cloud Console: https://console.cloud.google.com/
+CLOUD_ANCHOR_API_KEY=your_cloud_anchor_api_key_here
