@@ -169,6 +169,7 @@ public class CloudAnchorActivity extends AppCompatActivity implements GLSurfaceV
 
   private CloudAnchorManager cloudAnchorManager;
   private HostResolveMode currentMode;
+  private FirebaseManager firebaseManager;
 
   private static void saveAnchorToStorage(
       String anchorId, String anchorNickname, SharedPreferences anchorPreferences) {
@@ -216,6 +217,10 @@ public class CloudAnchorActivity extends AppCompatActivity implements GLSurfaceV
       currentMode = HostResolveMode.RESOLVING;
     }
     drawLines = this.getIntent().getBooleanExtra(EXTRA_DRAW_LINES, false);
+    
+    // Initialize Firebase
+    firebaseManager = new FirebaseManager();
+    
     showPrivacyDialog();
   }
 
@@ -701,7 +706,7 @@ public class CloudAnchorActivity extends AppCompatActivity implements GLSurfaceV
         return;
       }
       setAnchorAsResolved(cloudAnchorId, anchor);
-      userMessageText.setText(getString(R.string.resolving_success));
+      // userMessageText.setText(getString(R.string.resolving_success));
       synchronized (anchorLock) {
         if (unresolvedAnchorIds.isEmpty()) {
           debugText.setText(getString(R.string.debug_resolving_success));
@@ -741,6 +746,10 @@ public class CloudAnchorActivity extends AppCompatActivity implements GLSurfaceV
     /** Callback function invoked when the user presses the OK button in the Save Anchor Dialog. */
     private void onAnchorNameEntered(String anchorNickname) {
       saveAnchorToStorage(cloudAnchorId, anchorNickname, sharedPreferences);
+      
+      // Save to Firebase Realtime Database
+      firebaseManager.saveAnchorToFirebase(cloudAnchorId, anchorNickname);
+      
       userMessageText.setVisibility(View.GONE);
       debugText.setText(getString(R.string.debug_hosting_success, cloudAnchorId));
       Intent sendIntent = new Intent();

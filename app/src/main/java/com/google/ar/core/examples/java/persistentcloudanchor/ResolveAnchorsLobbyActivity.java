@@ -20,6 +20,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.util.Log;
 import android.widget.EditText;
 import android.widget.Spinner;
 import androidx.appcompat.app.AppCompatActivity;
@@ -36,6 +37,8 @@ public class ResolveAnchorsLobbyActivity extends AppCompatActivity {
   private SharedPreferences sharedPreferences;
   List<AnchorItem> selectedAnchors;
   private boolean drawLines = false;
+  private FirebaseManager firebaseManager;
+  private MultiSelectItem adapter;
 
   public static List<AnchorItem> retrieveStoredAnchors(SharedPreferences anchorPreferences) {
     List<AnchorItem> anchors = new ArrayList<>();
@@ -84,10 +87,45 @@ public class ResolveAnchorsLobbyActivity extends AppCompatActivity {
     drawLinesButton.setOnClickListener((view) -> onDrawLinesButtonPress());
     sharedPreferences =
         getSharedPreferences(CloudAnchorActivity.PREFERENCE_FILE_KEY, Context.MODE_PRIVATE);
+    
+    // Initialize Firebase
+    firebaseManager = new FirebaseManager();
+    
+    // Load local anchors first
     selectedAnchors = retrieveStoredAnchors(sharedPreferences);
     spinner = (Spinner) findViewById(R.id.select_anchors_spinner);
-    MultiSelectItem adapter = new MultiSelectItem(this, 0, selectedAnchors, spinner);
+    adapter = new MultiSelectItem(this, 0, selectedAnchors, spinner);
     spinner.setAdapter(adapter);
+    
+    // Fetch anchors from Firebase
+    fetchAnchorsFromFirebase();
+  }
+  
+  private void fetchAnchorsFromFirebase() {
+    firebaseManager.fetchAnchorsFromFirebase(new FirebaseManager.AnchorFetchListener() {
+      @Override
+      public void onAnchorsRetrieved(List<AnchorItem> firebaseAnchors) {
+        // Merge Firebase anchors with local anchors (avoid duplicates)
+        List<String> localAnchorIds = new ArrayList<>();
+        for (AnchorItem item : selectedAnchors) {
+          localAnchorIds.add(item.getAnchorId());
+        }
+        
+        for (AnchorItem firebaseAnchor : firebaseAnchors) {
+          if (!localAnchorIds.contains(firebaseAnchor.getAnchorId())) {
+            selectedAnchors.add(firebaseAnchor);
+          }
+        }
+        
+        // Update the adapter on the UI thread
+        runOnUiThread(() -> adapter.notifyDataSetChanged());
+      }
+      
+      @Override
+      public void onError(String errorMessage) {
+        Log.e("ResolveAnchorsLobby", "Error fetching Firebase anchors: " + errorMessage);
+      }
+    });
   }
 
   @Override
