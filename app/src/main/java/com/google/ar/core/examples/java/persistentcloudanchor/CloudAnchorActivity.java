@@ -553,7 +553,7 @@ public class CloudAnchorActivity extends AppCompatActivity implements GLSurfaceV
           }
         }
 
-        if (anchor == null) {
+        if (anchor == null && !drawLines) {
           // Visualize planes.
           planeRenderer.drawPlanes(
               session.getAllTrackables(Plane.class),
