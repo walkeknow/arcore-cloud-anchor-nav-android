@@ -22,12 +22,20 @@ class AnchorItem {
   private final String anchorName;
   private final long minutesSinceCreation;
   private boolean selected;
+  private final Double latitude;
+  private final Double longitude;
 
   public AnchorItem(String anchorId, String anchorName, long minutesSinceCreation) {
+    this(anchorId, anchorName, minutesSinceCreation, null, null);
+  }
+  
+  public AnchorItem(String anchorId, String anchorName, long minutesSinceCreation, Double latitude, Double longitude) {
     this.anchorId = anchorId;
     this.anchorName = anchorName;
     this.minutesSinceCreation = minutesSinceCreation;
     this.selected = false;
+    this.latitude = latitude;
+    this.longitude = longitude;
   }
 
   public String getAnchorName() {
@@ -52,5 +60,13 @@ class AnchorItem {
 
   public void setSelected(boolean selected) {
     this.selected = selected;
+  }
+  
+  public Double getLatitude() {
+    return latitude;
+  }
+  
+  public Double getLongitude() {
+    return longitude;
   }
 }

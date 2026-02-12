@@ -16,9 +16,12 @@
 
 package com.google.ar.core.examples.java.persistentcloudanchor;
 
+import android.Manifest;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
+import android.location.Location;
 import android.opengl.GLES20;
 import android.opengl.GLSurfaceView;
 import android.os.Bundle;
@@ -31,8 +34,13 @@ import android.view.WindowManager;
 import android.widget.TextView;
 import android.widget.Toast;
 import androidx.annotation.GuardedBy;
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 import androidx.fragment.app.DialogFragment;
+import com.google.android.gms.location.FusedLocationProviderClient;
+import com.google.android.gms.location.LocationServices;
 import com.google.ar.core.Anchor;
 import com.google.ar.core.Anchor.CloudAnchorState;
 import com.google.ar.core.ArCoreApk;
@@ -91,6 +99,8 @@ public class CloudAnchorActivity extends AppCompatActivity implements GLSurfaceV
   protected static final String HOSTED_ANCHOR_MINUTES = "anchor_minutes";
   protected static final double MIN_DISTANCE = 0.2f;
   protected static final double MAX_DISTANCE = 10.0f;
+  
+  private static final int LOCATION_PERMISSION_REQUEST_CODE = 1001;
 
   static Intent newHostingIntent(Context packageContext) {
     Intent intent = new Intent(packageContext, CloudAnchorActivity.class);
@@ -170,6 +180,7 @@ public class CloudAnchorActivity extends AppCompatActivity implements GLSurfaceV
   private CloudAnchorManager cloudAnchorManager;
   private HostResolveMode currentMode;
   private FirebaseManager firebaseManager;
+  private FusedLocationProviderClient fusedLocationClient;
 
   private static void saveAnchorToStorage(
       String anchorId, String anchorNickname, SharedPreferences anchorPreferences) {
@@ -220,6 +231,10 @@ public class CloudAnchorActivity extends AppCompatActivity implements GLSurfaceV
     
     // Initialize Firebase
     firebaseManager = new FirebaseManager();
+    
+    // Initialize location services for GPS capture
+    fusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
+    requestLocationPermissions();
     
     showPrivacyDialog();
   }
@@ -361,10 +376,16 @@ public class CloudAnchorActivity extends AppCompatActivity implements GLSurfaceV
   }
 
   @Override
-  public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] results) {
+  public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] results) {
     super.onRequestPermissionsResult(requestCode, permissions, results);
 
-    if (!CameraPermissionHelper.hasCameraPermission(this)) {
+    if (requestCode == LOCATION_PERMISSION_REQUEST_CODE) {
+      if (results.length > 0 && results[0] == PackageManager.PERMISSION_GRANTED) {
+        Log.d(TAG, "Location permission granted");
+      } else {
+        Log.w(TAG, "Location permission denied - anchor will be saved without GPS coordinates");
+      }
+    } else if (!CameraPermissionHelper.hasCameraPermission(this)) {
       Toast.makeText(this, "Camera permission is needed to run this application", Toast.LENGTH_LONG)
           .show();
       if (!CameraPermissionHelper.shouldShowRequestPermissionRationale(this)) {
@@ -747,8 +768,8 @@ public class CloudAnchorActivity extends AppCompatActivity implements GLSurfaceV
     private void onAnchorNameEntered(String anchorNickname) {
       saveAnchorToStorage(cloudAnchorId, anchorNickname, sharedPreferences);
       
-      // Save to Firebase Realtime Database
-      firebaseManager.saveAnchorToFirebase(cloudAnchorId, anchorNickname);
+      // Capture GPS location and save to Firebase
+      captureAndSaveLocationToFirebase(cloudAnchorId, anchorNickname);
       
       userMessageText.setVisibility(View.GONE);
       debugText.setText(getString(R.string.debug_hosting_success, cloudAnchorId));
@@ -772,6 +793,51 @@ public class CloudAnchorActivity extends AppCompatActivity implements GLSurfaceV
       hostDialogFragment.setOkListener(this::onAnchorNameEntered);
       hostDialogFragment.setArguments(args);
       hostDialogFragment.show(getSupportFragmentManager(), "HostDialog");
+    }
+  }
+  
+  /**
+   * Requests location permissions at runtime if not already granted.
+   */
+  private void requestLocationPermissions() {
+    if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
+        != PackageManager.PERMISSION_GRANTED) {
+      ActivityCompat.requestPermissions(
+          this,
+          new String[]{Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION},
+          LOCATION_PERMISSION_REQUEST_CODE);
+    }
+  }
+  
+  /**
+   * Captures the current GPS location and saves the anchor to Firebase with coordinates.
+   */
+  private void captureAndSaveLocationToFirebase(String anchorId, String anchorName) {
+    if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
+        == PackageManager.PERMISSION_GRANTED) {
+      
+      fusedLocationClient.getLastLocation()
+          .addOnSuccessListener(this, location -> {
+            if (location != null) {
+              double latitude = location.getLatitude();
+              double longitude = location.getLongitude();
+              Log.d(TAG, "Captured GPS coordinates: " + latitude + ", " + longitude);
+              
+              // Save to Firebase with GPS coordinates
+              firebaseManager.saveAnchorToFirebase(anchorId, anchorName, latitude, longitude);
+            } else {
+              Log.w(TAG, "Location is null - saving anchor without GPS coordinates");
+              firebaseManager.saveAnchorToFirebase(anchorId, anchorName);
+            }
+          })
+          .addOnFailureListener(e -> {
+            Log.e(TAG, "Failed to get location: " + e.getMessage());
+            // Save without GPS coordinates if location fetch fails
+            firebaseManager.saveAnchorToFirebase(anchorId, anchorName);
+          });
+    } else {
+      Log.w(TAG, "Location permission not granted - saving anchor without GPS coordinates");
+      firebaseManager.saveAnchorToFirebase(anchorId, anchorName);
     }
   }
 

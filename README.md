@@ -83,14 +83,26 @@ This application leverages Google's ARCore Cloud Anchors API and Firebase to cre
 - **Realtime Database**: Stores anchor IDs and metadata
 - **Cloud Functions Ready**: Extensible for server-side logic
 - **Authentication**: Google Services integration for user management
+- **GPS Coordinates**: Captures and stores location data for map integration
 - **Data Structure**:
   ```
   anchors/
     └── {anchorId}/
         ├── cloudAnchorId: string
         ├── name: string (optional)
-        └── timestamp: long
+        ├── timestamp: long
+        ├── latitude: number (optional)
+        └── longitude: number (optional)
   ```
+
+### 9. **GPS Location Capture & Wayfinder Integration** 🆕
+
+- **Automatic GPS Capture**: Records device location when hosting anchors
+- **WGS84 Coordinates**: Standard lat/lng format compatible with mapping systems
+- **Wayfinder Export**: Export anchor coordinates to GeoJSON or Wayfinder POI format
+- **Map Integration**: Combine precise AR anchors with indoor/outdoor navigation
+- **Hybrid Positioning**: Cloud Anchors for cm-level AR + GPS for map integration
+- See [GPS_INTEGRATION.md](GPS_INTEGRATION.md) for detailed integration guide
 
 ## Technical Stack
 
@@ -98,6 +110,7 @@ This application leverages Google's ARCore Cloud Anchors API and Firebase to cre
 - **OpenGL ES 2.0**: Low-level graphics rendering
 - **Firebase Realtime Database**: Cloud data storage
 - **Google Cloud Anchor API**: Persistent cloud anchor hosting and resolution
+- **Google Play Services Location**: GPS capture for map integration
 - **Java**: Primary development language
 - **Android SDK**: Minimum SDK 24 (Android 7.0)
 
@@ -106,8 +119,8 @@ This application leverages Google's ARCore Cloud Anchors API and Firebase to cre
 - Android device with ARCore support
 - Android 7.0 (API Level 24) or higher
 - Active internet connection for cloud anchor operations
-- Camera permissions
-- Location permissions (for enhanced anchor resolution)
+- Camera permissions (required)
+- Location permissions (recommended for GPS capture and map integration)
 
 ## Getting Started
 

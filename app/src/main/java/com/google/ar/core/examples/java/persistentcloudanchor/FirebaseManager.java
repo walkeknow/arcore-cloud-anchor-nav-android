@@ -54,10 +54,28 @@ public class FirebaseManager {
    * @param anchorName The name/nickname of the anchor
    */
   public void saveAnchorToFirebase(String anchorId, String anchorName) {
+    saveAnchorToFirebase(anchorId, anchorName, null, null);
+  }
+  
+  /**
+   * Saves an anchor with GPS coordinates to Firebase Realtime Database.
+   *
+   * @param anchorId The cloud anchor ID
+   * @param anchorName The name/nickname of the anchor
+   * @param latitude GPS latitude (nullable)
+   * @param longitude GPS longitude (nullable)
+   */
+  public void saveAnchorToFirebase(String anchorId, String anchorName, Double latitude, Double longitude) {
     Map<String, Object> anchorData = new HashMap<>();
     anchorData.put("anchorId", anchorId);
     anchorData.put("name", anchorName);
     anchorData.put("timestamp", ServerValue.TIMESTAMP);
+    
+    if (latitude != null && longitude != null) {
+      anchorData.put("latitude", latitude);
+      anchorData.put("longitude", longitude);
+      Log.d(TAG, "Saving anchor with GPS: " + latitude + ", " + longitude);
+    }
 
     databaseRef.child(CLOUD_ANCHORS_PATH).child(anchorId).setValue(anchorData)
         .addOnSuccessListener(aVoid -> 
@@ -84,6 +102,8 @@ public class FirebaseManager {
                 String anchorId = snapshot.child("anchorId").getValue(String.class);
                 String name = snapshot.child("name").getValue(String.class);
                 Long timestamp = snapshot.child("timestamp").getValue(Long.class);
+                Double latitude = snapshot.child("latitude").getValue(Double.class);
+                Double longitude = snapshot.child("longitude").getValue(Double.class);
 
                 if (anchorId != null && name != null && timestamp != null) {
                   // Calculate time since creation in minutes
@@ -92,7 +112,10 @@ public class FirebaseManager {
 
                   // Only include anchors less than 24 hours old
                   if (timeSinceCreation < 24 * 60) {
-                    anchors.add(new AnchorItem(anchorId, name, timeSinceCreation));
+                    anchors.add(new AnchorItem(anchorId, name, timeSinceCreation, latitude, longitude));
+                    if (latitude != null && longitude != null) {
+                      Log.d(TAG, "Loaded anchor with GPS: " + latitude + ", " + longitude);
+                    }
                   } else {
                     // Optionally delete old anchors
                     deleteAnchorFromFirebase(anchorId);
